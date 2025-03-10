@@ -110,7 +110,7 @@ spec:
         }       
        stage('pull code') {
             steps {                          
-                echo '--------------------------拉取代码-----------------------'
+                echo '--------------------------ops-repo-----------------------'
                 checkout([$class: 'GitSCM', branches: [[name: "main"]], 
                 extensions: [], userRemoteConfigs: [[credentialsId: 'github-ci', 
                 url: "git@github.com:yjiangi/ops-repo.git"]]])
@@ -121,9 +121,9 @@ spec:
                 container('tools'){
                     script{
                       sh """
-                       envsubst < ./values.tpl > helm/values.yaml
-                       cat helm/values.yaml
-                       helm template --debug  helm/  -f helm/values.yaml
+                       envsubst < ./values.tpl > helm/${AppName}-values.yaml
+                       cat helm/${AppName}-values.yaml
+                       helm template --debug  helm/  -f helm/${AppName}-values.yaml
                       """
                     }
                 }
