@@ -123,7 +123,7 @@ spec:
                       sh """
                        envsubst < ./values.tpl > helm/${AppName}-values.yaml
                        cat helm/${AppName}-values.yaml
-                       helm template --debug  helm/  -f helm/${AppName}-values.yaml
+                       helm template --debug  helm/ --output-dir=dev/${AppName} -f helm/${AppName}-values.yaml
                       """
                     }
                 }
