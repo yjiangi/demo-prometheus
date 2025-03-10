@@ -124,6 +124,7 @@ spec:
                        envsubst < ./values.tpl > helm/${AppName}-values.yaml
                        cat helm/${AppName}-values.yaml
                        helm template --debug  helm/ --output-dir=dev/${AppName} -f helm/${AppName}-values.yaml
+                       mv dev/${AppName}/ops-repo/templates/* dev/${AppName}/
                       """
                     }
                 }
