@@ -55,9 +55,10 @@ spec:
         }
     }
     environment {
-        DOCKER_REGISTRY = "crpi-o0ivl952pax3mypf.cn-wulanchabu.personal.cr.aliyuncs.com" 
-        REGISTRY_NAMEPSACE = "cylia"
+        DOCKER_REGISTRY = "registry.cn-hangzhou.aliyuncs.com"
+        REGISTRY_NAMEPSACE = "gitops-demo"
         IMAGE = "${DOCKER_REGISTRY}/${REGISTRY_NAMEPSACE}"
+
     }
     options {
         //保持构建15天 最大保持构建的30个 发布包保留15天
@@ -69,6 +70,16 @@ spec:
     }
 
     stages {
+        stage('commit'){
+            steps{
+              script{
+                  COMMITID = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                  TIMESTAMP = sh(script: "date +%Y%m%d%H%M-%S", returnStdout: true).trim()
+                  env.ImageTag = "${BUILD_ID}-${TIMESTAMP}-${COMMITID}"
+                  env.AppName =  env.JOB_NAME.split('/').last().toLowerCase()
+                }   
+            }
+        }
         stage('build image') {
             steps {
                 container('docker') {
@@ -78,12 +89,13 @@ spec:
                         passwordVariable: 'DOCKER_PASSWORD']]) {
                           script {
                             sh """
+                            docker buildx create --name mybuilder --use --driver docker-container --driver-opt image=registry.cn-hangzhou.aliyuncs.com/s-ops/buildkit:buildx-stable-1
+
                             echo "登陆仓库"
                             docker login ${DOCKER_REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
 
                             echo "构建/推送镜像"
-                            docker build --progress=plain --no-cache -f Dockerfile -t ${IMAGE}/xsk-mall:1 .
-                            docker push ${IMAGE}/xsk-mall:1
+                            docker buildx build --progress=plain --no-cache --platform=linux/amd64 -f Dockerfile -t ${IMAGE}/${AppName}:${ImageTag} . --push
                             """
                         }
                     }    
