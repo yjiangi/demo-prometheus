@@ -1,5 +1,4 @@
 def COMMITID = ""
-def TIMESTAMP = ""
 pipeline {
     agent {
         kubernetes {
@@ -79,11 +78,11 @@ spec:
             steps{
               script{
                   COMMITID = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-                  env.ImageTag = "${BUILD_ID}-${TIMESTAMP}-${COMMITID}"
+                  env.ImageTag = "${BUILD_ID}-${BUILD_TIMESTAMP}-${COMMITID}"
                   env.AppName =  env.JOB_NAME.split('/').last().toLowerCase()
 		  sh """
                   echo "分支id: ${COMMITID}"
-                  echo "构建时间: ${TIMESTAMP}"
+                  echo "构建时间: ${BUILD_TIMESTAMP}"
                   echo "镜像TAG: ${ImageTag}"
                   echo "服务名字: ${AppName}"
                   """	
