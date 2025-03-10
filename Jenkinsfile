@@ -16,6 +16,9 @@ spec:
       emptyDir: {}
     - name: workspace-volume
       emptyDir: {}      
+    - name: host-time
+      hostPath:
+      path: /etc/localtime
   serviceAccount: jenkins      
   containers:
     - name: jnlp
@@ -46,6 +49,8 @@ spec:
       securityContext:
         privileged: true
       volumeMounts:
+      - name: host-time
+        mountPath: /etc/localtime
       - name: docker-socket
         mountPath: /var/run
       - name: workspace-volume
