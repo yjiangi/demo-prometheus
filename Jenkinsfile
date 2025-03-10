@@ -108,6 +108,14 @@ spec:
                 }
             }
         }       
+       stage('pull code') {
+            steps {                          
+                echo '--------------------------拉取代码-----------------------'
+                checkout([$class: 'GitSCM', branches: [[name: "main"]], 
+                extensions: [], userRemoteConfigs: [[credentialsId: 'github-ci', 
+                url: "git@github.com:yjiangi/ops-repo.git"]]])
+            }
+        }  
       stage('change ImageTag') {
           steps {
                 container('tools'){
