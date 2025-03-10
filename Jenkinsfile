@@ -1,4 +1,5 @@
 def COMMITID = ""
+def TIMESTAMP = ""
 pipeline {
     agent {
         kubernetes {
@@ -15,9 +16,6 @@ spec:
       emptyDir: {}
     - name: workspace-volume
       emptyDir: {}      
-    - name: host-time
-      hostPath:
-      path: /etc/localtime
   serviceAccount: jenkins      
   containers:
     - name: jnlp
@@ -48,8 +46,6 @@ spec:
       securityContext:
         privileged: true
       volumeMounts:
-      - name: host-time
-        mountPath: /etc/localtime
       - name: docker-socket
         mountPath: /var/run
       - name: workspace-volume
@@ -59,6 +55,7 @@ spec:
         }
     }
     environment {
+        TZ = "Asia/Shanghai"
         DOCKER_REGISTRY = "registry.cn-hangzhou.aliyuncs.com"
         REGISTRY_NAMEPSACE = "gitops-demo"
         IMAGE = "${DOCKER_REGISTRY}/${REGISTRY_NAMEPSACE}"
@@ -78,11 +75,12 @@ spec:
             steps{
               script{
                   COMMITID = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-                  env.ImageTag = "${BUILD_ID}-${BUILD_TIMESTAMP}-${COMMITID}"
+                  TIMESTAMP = sh(script: "date +%Y%m%d%H%M-%S", returnStdout: true).trim() 
+                  env.ImageTag = "${BUILD_ID}-${TIMESTAMP}-${COMMITID}"
                   env.AppName =  env.JOB_NAME.split('/').last().toLowerCase()
 		  sh """
                   echo "分支id: ${COMMITID}"
-                  echo "构建时间: ${BUILD_TIMESTAMP}"
+                  echo "构建时间: ${TIMESTAMP}"
                   echo "镜像TAG: ${ImageTag}"
                   echo "服务名字: ${AppName}"
                   """	
@@ -126,8 +124,7 @@ spec:
                       sh """
                        envsubst < ./values.tpl > helm/${AppName}-values.yaml
                        cat helm/${AppName}-values.yaml
-                       helm template --debug  helm/ --output-dir=dev/${AppName} -f helm/${AppName}-values.yaml
-                       mv dev/${AppName}/ops-repo/templates/* dev/${AppName}/
+                       helm template --debug  helm/  -f helm/${AppName}-values.yaml
                       """
                     }
                 }
