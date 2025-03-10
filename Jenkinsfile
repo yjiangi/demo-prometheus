@@ -77,6 +77,12 @@ spec:
                   TIMESTAMP = sh(script: "date +%Y%m%d%H%M-%S", returnStdout: true).trim()
                   env.ImageTag = "${BUILD_ID}-${TIMESTAMP}-${COMMITID}"
                   env.AppName =  env.JOB_NAME.split('/').last().toLowerCase()
+		  sh """
+                  echo "分支id: ${COMMITID}"
+                  echo "构建时间: ${TIMESTAMP}"
+                  echo "镜像TAG: ${ImageTag}"
+                  echo "服务名字: ${AppName}"
+                  """	
                 }   
             }
         }
@@ -102,5 +108,36 @@ spec:
                 }
             }
         }       
+      stage('change ImageTag') {
+          steps {
+                container('tools'){
+                    script{
+                      sh """
+                       envsubst < ./values.tpl > helm/values.yaml
+                       cat helm/values.yaml
+                       helm template --debug  helm/  -f helm/values.yaml
+                      """
+                    }
+                }
+            }
+        }
+        stage('push yaml') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'github-ci', keyFileVariable: 'IDENTITY')]) {
+                    script {
+                      sh """
+                        git config --global user.email "ci"
+                        git config --global user.email "ci@ci.com"
+                        git config core.sshCommand 'ssh -o StrictHostKeyChecking=no -i $IDENTITY'
+                        git checkout main
+                        git pull origin main
+                        git add .
+                        git commit -m "${AppName}-${ImageTag} " || true
+                        git push origin main  
+                        """
+                    }    
+                }
+            }
+        }
     }
 }
