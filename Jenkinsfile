@@ -79,7 +79,6 @@ spec:
             steps{
               script{
                   COMMITID = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-                  TIMESTAMP = sh(script: "date +%Y%m%d%H%M-%S", returnStdout: true).trim()
                   env.ImageTag = "${BUILD_ID}-${TIMESTAMP}-${COMMITID}"
                   env.AppName =  env.JOB_NAME.split('/').last().toLowerCase()
 		  sh """
